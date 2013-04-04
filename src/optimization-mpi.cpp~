@@ -16,6 +16,7 @@
 #include "interval.h"
 #include "functions.h"
 #include "minimizer.h"
+#include <omp.h>
 
 using namespace std;
 
@@ -64,6 +65,8 @@ void minimize(itvfun f,  // Function to minimize
 	      double& min_ub,  // Current minimum upper bound
 	      minimizer_list& ml) // List of current minimizers
 {
+	double min_ub0, min_ub1, min_ub2, min_ub3;
+
   interval fxy = f(x,y);
   
   if (fxy.left() > min_ub) { // Current box cannot contain minimum?
@@ -92,10 +95,22 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-  minimize(f,xl,yl,threshold,min_ub,ml);
-  minimize(f,xl,yr,threshold,min_ub,ml);
-  minimize(f,xr,yl,threshold,min_ub,ml);
-  minimize(f,xr,yr,threshold,min_ub,ml);
+	cout << "ml:" << ml.size() << endl;
+
+	#pragma omp parallel sections reduction (min:min_ub)
+	{
+		#pragma omp section
+		minimize(f,xl,yl,threshold,min_ub,ml);
+		#pragma omp section
+		minimize(f,xl,yr,threshold,min_ub,ml);
+		#pragma omp section
+		minimize(f,xr,yl,threshold,min_ub,ml);
+		#pragma omp section
+		minimize(f,xr,yr,threshold,min_ub,ml);
+  }
+  // min des 4 
+  // min_ub = min( min_ub0, min_ub1, min_ub2, min_ub3 );
+  
 }
 
 // Branch-and-bound minimization algorithm
@@ -138,25 +153,6 @@ void minimize_first(itvfun f,  // Function to minimize
   // and recursively explore them
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
-	
-	
-/*	if ( RANK == 0 )
-	{
-		minimize(f,xl,yl,threshold,min_ub,ml);
-	}
-	else if ( RANK == 1 )
-	{
-		minimize(f,xl,yr,threshold,min_ub,ml);
-	}
-	else if ( RANK == 2 )
-	{
-		minimize(f,xr,yl,threshold,min_ub,ml);
-	}
-	else if ( RANK == 3 )
-	{
-		minimize(f,xr,yr, threshold ,min_ub,ml);
-	}*/
-	
 	
 	consts constante;
 	constante.f = f;
@@ -250,16 +246,18 @@ int main(int argc, char **argv)
   cout << "Message recu " << pack.inter.x << " par " << RANK << endl;
   minimize(pack.constantes.f, pack.inter.x, pack.inter.y, pack.constantes.threshold, pack.constantes.min_ub, pack.constantes.ml);
   
+  MPI_Reduce( &minimums, &min_ub, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
+  
   // Reception du message tous --> executer leur minimize
   
-  cout << "bloup" << endl;
-  // Displaying all potential minimizers
- /* copy(minimums.begin(),minimums.end(),
+  if (RANK == 0){
+    cout << "bloup" << endl;
+      // Displaying all potential minimizers
+  	copy(minimums.begin(),minimums.end(),
        ostream_iterator<minimizer>(cout,"\n"));    
-  cout << "Number of minimizers: " << minimums.size() << endl;
-  cout << "Upper bound for minimum: " << min_ub << endl;*/
-  
-  
+		cout << "Number of minimizers: " << minimums.size() << endl;
+		cout << "Upper bound for minimum: " << min_ub << endl;
+  }
   
   MPI_Finalize();
   
