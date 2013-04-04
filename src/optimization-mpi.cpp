@@ -19,6 +19,29 @@
 
 using namespace std;
 
+int nbProc;
+int RANK;
+
+struct interv{
+	 interval x; // Current bounds for 1st dimension
+	 interval y; // Current bounds for 2nd dimension
+};
+typedef interv interv;
+
+struct consts{
+	 itvfun f;
+	 double threshold;  // Threshold at which we should stop splitting
+	 double min_ub;  // Current minimum upper bound
+	 minimizer_list ml;
+};
+typedef consts consts;
+
+struct package{
+	interv inter;
+	consts constantes;
+	
+};
+typedef package package;
 
 // Split a 2D box into four subboxes by splitting each dimension
 // into two equal subparts
@@ -81,12 +104,12 @@ void minimize_first(itvfun f,  // Function to minimize
 	      const interval& y, // Current bounds for 2nd dimension
 	      double threshold,  // Threshold at which we should stop splitting
 	      double& min_ub,  // Current minimum upper bound
-	      minimizer_list& ml,// List of current minimizers
-	      int rank) 
+	      minimizer_list& ml// List of current minimizers
+	      /*int RANK*/) 
 {
 	
 	
-	
+	cout << "RANK :" << RANK << endl;
 
   interval fxy = f(x,y);
   
@@ -116,38 +139,62 @@ void minimize_first(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 	
-	if ( rank == 0 )
+	
+/*	if ( RANK == 0 )
 	{
 		minimize(f,xl,yl,threshold,min_ub,ml);
 	}
-	else if ( rank == 1 )
+	else if ( RANK == 1 )
 	{
 		minimize(f,xl,yr,threshold,min_ub,ml);
 	}
-	else if ( rank == 2 )
+	else if ( RANK == 2 )
 	{
 		minimize(f,xr,yl,threshold,min_ub,ml);
 	}
-	else if ( rank == 3 )
+	else if ( RANK == 3 )
 	{
-		minimize(f,xr,yr,threshold,min_ub,ml);
+		minimize(f,xr,yr, threshold ,min_ub,ml);
+	}*/
+	
+	
+	consts constante;
+	constante.f = f;
+	constante.threshold = threshold;
+	constante.min_ub = min_ub;
+	constante.ml = ml;
+	
+	interv inter[4];
+	inter[0].x = xl;
+	inter[0].y = yl;
+	inter[1].x = xl;
+	inter[1].y = yr;
+	inter[2].x = xr;
+	inter[2].y = yl;
+	inter[3].x = xr;
+	inter[3].y = yr;
+	
+	package pack[4];
+	for (int i = 0; i < 4; ++i){
+		pack[i].inter = inter[i];
+		pack[i].constantes = constante;
 	}
-  
-  
-  
+	
+	//MPISend à tous --> voir main
+	for(int i=0; i<nbProc; ++i){
+		MPI_Send(&pack[i],sizeof(package),MPI_BYTE,i,0,MPI_COMM_WORLD);
+	}
   
 }
 
 
 int main(int argc, char **argv)
 {
-	int nbProc;
-	int rank;
 	
 	MPI_Init(&argc, &argv);
 	
 	MPI_Comm_size(MPI_COMM_WORLD, &nbProc);
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &RANK);
 	
   cout.precision(16);
   // By default, the currently known upper bound for the minimizer is +oo
@@ -168,7 +215,7 @@ int main(int argc, char **argv)
   bool good_choice;
 
   // Asking the user for the name of the function to optimize
-  if ( rank == 0 )
+  if ( RANK == 0 )
 	{
 		do {
 		  good_choice = true;
@@ -193,15 +240,27 @@ int main(int argc, char **argv)
 		cout << "Precision? ";
 		cin >> precision;
   
-  	minimize_first(fun.f,fun.x,fun.y,precision,min_ub,minimums, rank);
-  
+  	minimize_first(fun.f,fun.x,fun.y,precision,min_ub,minimums/*, RANK)*/);
   }
   
+  //int msg;
+  package pack;
+  
+  MPI_Recv(&pack,sizeof(package),MPI_BYTE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+  cout << "Message recu " << pack.inter.x << " par " << RANK << endl;
+  minimize(pack.constantes.f, pack.inter.x, pack.inter.y, pack.constantes.threshold, pack.constantes.min_ub, pack.constantes.ml);
+  
+  // Reception du message tous --> executer leur minimize
+  
+  if (RANK == 0){
+    cout << "bloup" << endl;
+  }
+
   // Displaying all potential minimizers
-  copy(minimums.begin(),minimums.end(),
+ /* copy(minimums.begin(),minimums.end(),
        ostream_iterator<minimizer>(cout,"\n"));    
   cout << "Number of minimizers: " << minimums.size() << endl;
-  cout << "Upper bound for minimum: " << min_ub << endl;
+  cout << "Upper bound for minimum: " << min_ub << endl;*/
   
   
   
