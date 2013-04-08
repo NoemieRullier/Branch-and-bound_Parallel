@@ -20,3 +20,6 @@
 *.tex.backup
 *.tex.bak
 *.toc
+
+#MAC
+*.DS_STORE
