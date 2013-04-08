@@ -1,0 +1,186 @@
+%% Classe du document
+\documentclass[a4paper,10pt]{article}
+
+%% Francisation
+\usepackage[francais]{babel} % Indique que l'on utilise le francais
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % Indique que l'on utilise tout le clavier
+%\usepackage[latin1]{inputenc}
+
+%% Réglages généraux
+\usepackage[top=3cm, bottom=3cm, left=3cm, right=3cm]{geometry} % Taille de la feuille
+\usepackage{lastpage}
+
+%% Package pour le texte
+\usepackage{soul} % Souligner
+\usepackage{color} % Utilisation de couleurs
+\usepackage{hyperref} % Créer des liens et des signets
+\usepackage{eurosym}% Pour le symbole euro
+\usepackage{fancyhdr}% Entête et pied de page
+
+%% Package pour les tableaux
+\usepackage{multirow} % Colonnes multiples
+\usepackage{cellspace}
+\usepackage{array}
+
+%% Package pour les dessins
+\usepackage{pstricks}
+\usepackage{graphicx} % Importer des images
+\usepackage{pdftricks} % Pour utiliser avec pdfTex
+\usepackage{pst-pdf} % Pour utiliser avec pdfTex
+\usepackage{pst-node} % Pose de noeuds
+\usepackage{subfig}
+\usepackage{float}
+
+%% Package pour les maths
+\usepackage{amsmath} % Commandes essentielles
+\usepackage{amssymb} % Principaux symboles
+
+%% Package pour le code
+\usepackage{listings} % Utilisation de la couleur syntaxique des langages
+\usepackage{url}
+
+
+\usepackage[babel=true]{csquotes} % Permet les quotations (guillemets)
+\usepackage{tocvsec2}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+
+\usepackage{tikz}
+\usepackage{pdfpages}
+
+\usetikzlibrary{shapes} % A revoir
+
+%--------------------- Autres définitions ---------------------%
+
+% Propriété des liens
+\hypersetup{
+colorlinks = true, % Colorise les liens
+urlcolor = blue, % Couleur des hyperliens
+linkcolor = black, % Couleur des liens internes
+}
+
+\definecolor{grey}{rgb}{0.95,0.95,0.95}
+
+% Language Definitions for Turtle
+%TODO: a revoir avec les couleur de gedit
+\definecolor{olivegreen}{rgb}{0.2,0.8,0.5}
+\definecolor{grey2}{rgb}{0.5,0.5,0.5}
+\lstdefinelanguage{ttl}{
+sensitive=true,
+morecomment=[s][\color{grey2}]{@}{:},
+morecomment=[l][\color{olivegreen}]{\#},
+morecomment=[s][\color{red}]{<}{/>},
+morestring=[s][\color{olivegreen}]{<http://w}{\#>},
+morestring=[b][\color{blue}]{\"},
+}
+
+\lstset{
+frame=single,
+breaklines=true,
+basicstyle=\ttfamily,
+backgroundcolor=\color{grey},
+basicstyle=\scriptsize,
+keywordstyle=\color{blue},
+commentstyle=\color{green},
+stringstyle=\color{red},
+identifierstyle=\color{blue}
+}
+
+%Definition de la commande pour retirer l'espace devant les ':'
+\makeatletter
+\@ifpackageloaded{babel}%
+        {\newcommand{\nospace}[1]{{\NoAutoSpaceBeforeFDP{}#1}}}%  % !! double {{}} pour cantonner l'effet à l'argument #1 !!
+        {\newcommand{\nospace}[1]{#1}}
+\makeatother
+
+\setcounter{tocdepth}{3}
+%\maxsecnumdepth{subsubsection} % Dernière section numérotée
+
+\newcommand{\paperPrototyping}{\emph{paper prototyping}}
+
+% Corps du document :
+\begin{document}
+
+% Définition des entêtes et pieds de page
+\fancyhead[LE,CE,RE,LO,CO,RO]{}
+\fancyfoot[LE,CE,RE,LO,CO,RO]{}
+\fancyhead[LO, LE]{Multicore programming}
+\fancyhead[RO,RE]{2012/2013}
+\fancyfoot[LO,LE]{Université de \scshape{Nantes}}
+\fancyfoot[RO,RE]{Page \thepage \ sur \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+%\maketitle
+\begin{titlepage}
+
+\vspace*{\fill}~
+\begin{center}
+{\large \textsc{Rapport de Projet}} \\
+\vspace{1cm}
+{\LARGE Branch and bound Parallel} \\
+\vspace{1cm}
+MENORET Clément, RULLIER Noémie \\
+\today
+\end{center}
+\vspace*{\fill}
+
+\vspace{\stretch{1}}
+\begin{center}
+\noindent 
+\includegraphics[height=2.5cm]{Images/universite.png}
+\end{center}
+\pagebreak
+\end{titlepage}
+
+\newpage
+\tableofcontents  
+
+% Introduction
+\newpage
+\pagestyle{fancy}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%  Introduction générale
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+L'objectif de ce projet fut de paralléliser l'algorithme \emph{branch and bound parallel} permettant de calculer le minimum d'une fonction réelle %TODO Voir internet
+
+Nous allons donc ici présenter les différentes décisions prise afin de paralléliser l'algorithme ainsi qu'une comparaison des résultats obtenus entre la version parallèle et séquentielle.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%  Etape 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Les étapes de parallélisation}
+
+Afin de paralléliser ce programme, nous allons utiliser MPI et OpenMP. Ils permettent respectivement d'exploiter des ordinateurs distants afin d'exécuter des portions de programme et de calculer des portions de programmes sur une architecture à mémoire partagée.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%  Etape 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Les résultats}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%  CONCLUSION GENERALE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Conclusion générale}
+Ce projet nous a permis de réfléchir à la structure de l'IHM afin que celle-ci soit la plus intuitive possible pour l'utilisateur. Réfléchir à la position des
+boutons, le nom ou l'icône les représentant, comment l'ajout des composants se fera au sein de la liste, la gesture à utiliser, l'utilisation d'un menu \ldots{}
+Et donc, d'orienter notre conception sur l'IHM, plus que sur le modèle, et ainsi expérimenter une autre approche de conception.
+
+\end{document}
+
+\begin{figure}[H]
+    \center
+    \includegraphics[width=13.9cm]{Images/storyboard.png}
+    \caption{Le storyboard}
+\end{figure}
