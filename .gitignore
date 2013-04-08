@@ -11,3 +11,15 @@
 *.lai
 *.la
 *.a
+
+#Latex files
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.tex.backup
+*.tex.bak
+*.toc
+
+#MAC
+*.DS_STORE
