@@ -145,9 +145,9 @@ MENORET Clément, RULLIER Noémie \\
 %%%%%%%%%%  Introduction générale
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-L'objectif de ce projet fut de paralléliser l'algorithme \emph{branch and bound parallel} permettant de calculer le minimum d'une fonction réelle %TODO Voir internet
+L'objectif de ce projet fut de paralléliser l'algorithme \emph{branch and bound} permettant de calculer le minimum d'une fonction réelle par le découpage en boites de domaine.
 
-Nous allons donc ici présenter les différentes décisions prise afin de paralléliser l'algorithme ainsi qu'une comparaison des résultats obtenus entre la version parallèle et séquentielle.
+Nous allons donc ici présenter les différentes décisions prises afin de paralléliser l'algorithme ainsi qu'une comparaison des résultats obtenus entre la version parallèle et séquentielle.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Etape 1
@@ -155,32 +155,32 @@ Nous allons donc ici présenter les différentes décisions prise afin de parall
 \newpage
 \section{Les étapes de parallélisation}
 
-Afin de paralléliser ce programme, nous avons utiliser MPI et OpenMP. Ils permettent respectivement d'exploiter des ordinateurs distants afin d'exécuter des portions de programme et de calculer des portions de programmes sur une architecture à mémoire partagée.
+Afin de paralléliser ce programme, nous avons utilisé MPI et OpenMP. Ils permettent respectivement d'exploiter des ordinateurs distants, afin d'exécuter des portions de programme et de traiter les données, sur une architecture à mémoire partagée. 
 
 \subsection{MPI}
-Nous avons ici décidé d'utiliser quatre ordinateurs supplémentaires grâce à MPI. Nous avons donc dans un premier temps, regroupé tous les ordinateurs dans le même \emph{Communicator} et initialisé le tout. A ce stade, les quatre ordinateurs vont exécuter la suite de la fonction main. Nous avons donc préciser que seul l'ordinateur de rang 0 exécute le premier appel à \emph{minimize\_first}.
+Nous avons ici décidé d'utiliser quatre ordinateurs grâce à MPI. Nous avons donc, dans un premier temps, regroupé toutes les machines dans le même \emph{Communicator} et initialisé le tout. A ce stade, les quatre ordinateurs vont exécuter la suite de la fonction main. Nous avons donc précisé que seul l'ordinateur de rang 0 exécute le premier appel à \emph{minimize\_first}. 
 
-Cette première fonction permet de faire un premier découpage en quatre intervalles. Chaque machine recevra ensuite l'ensembles des informations permettant d'éxécuter à leur tour la fonction \emph{minimize}; chaque machine l'exécutera pour un des quatre intervalles. Ces informations seront envoyées via la fonction \emph{MPI\_Send()}. Elle permet d'envoyer des données à un ordinateur en lui précisant son rang. Afin de lui envoyer toutes les données nécessaires, nous avons créé de nouvelles structures:
+Cette première fonction permet de faire un premier découpage en quatre intervalles. Chaque machine recevra ensuite l'ensemble des informations permettant d'exécuter à leur tour la fonction \emph{minimize}; chaque machine l'exécutera pour un des quatre intervalles. Ces informations seront envoyées via la fonction \emph{MPI\_Send()}. Elle permet d'envoyer des données à un ordinateur en lui précisant son rang. Afin de lui envoyer toutes les données nécessaires, nous avons créé de nouvelles structures : 
 \begin{itemize}
-\item \textbf{interv}: cette structure permet de stocker l'intervalle qui va être envoyé. Elle est composée des attributs \emph{x} et \emph{y} de type \emph{interval}.
-\item \textbf{consts}: cette structure permet de stocker l'ensemble des paramètres nécessaires à la fonction \emph{minimize}.
-\item \textbf{package}: cette structure permet d'envoyer à la fois l'intervalle et les autres paramètres. Elle est composée d'un attribut \emph{inter} de type \emph{interv} et d'un attribut \emph{constantes} de type \emph{consts}.
+\item \textbf{interv}: cette structure permet de stocker l'intervalle qui va être envoyé. Elle est composée des attributs \emph{x} et \emph{y} de type \emph{interval} ; 
+\item \textbf{consts}: cette structure permet de stocker l'ensemble des paramètres nécessaires à la fonction \emph{minimize} ; 
+\item \textbf{package}: cette structure permet d'envoyer à la fois l'intervalle et les autres paramètres. Elle est composée d'un attribut \emph{inter} de type \emph{interv} et d'un attribut \emph{constantes} de type \emph{consts}. 
 \end{itemize}
-Nous avons décidé de créer deux structures distinctes car pour chaque machine, l'ensembles des paramètres autre que l'intervalle sont identiques.
-Afin que notre structure soit bien envoyée via la fonction \emph{MPI\_Send()}, nous avons définit le type de données à envoyer comme étant des \emph{MPI\_BYTE}.
+Nous avons décidé de créer deux structures distinctes car pour chaque machine, l'ensemble des paramètres, autre que l'intervalle, sont identiques.
+Afin que notre structure soit bien envoyée via la fonction \emph{MPI\_Send()}, nous avons défini le type de données à envoyer comme étant des \emph{MPI\_BYTE}.
 
-Nous avons donc dans la suite de la fonction main fait appel à la fonction \emph{MPI\_Recv()}. Celle-ci permet aux différentes machines de recevoir les messages envoyés par la machine de rang $i$ (ici $i=0$). Ces machines vont ensuites exécutées la fonction \emph{minimize}.
+Nous avons donc, dans la suite de la fonction main, fait appel à la fonction \emph{MPI\_Recv()}. Celle-ci permet aux différentes machines de recevoir les messages envoyés par la machine de rang $i$ (ici $i=0$). Ces machines vont ensuite exécuter la fonction \emph{minimize}. 
 
 %TODO
-De plus, dans le but de récupérer le résultat final, nous avons ajouté la fonction \emph{MPI\_Reduce()}. Celle-ci nous permettra de trouver le minimum de tous les minimums calculer par chaque machines.
+De plus, dans le but de récupérer le résultat final, nous avons ajouté la fonction \emph{MPI\_Reduce()}. Celle-ci nous permettra de trouver le minimum de tous les minimums calculés par chaque machine. 
 %TODO A revoir car ça marche pas
 
 \subsection{OpenMP}
-Nous avons ajouté un niveau supplémentaire de parallélisation avec l'ajout d'OpenMP. En effet sur chaque machine, exécutant \emph{minimize}, nous avons paralléliser l'appel aux appels récursif de \emph{minimize}.
-Nous avons donc défini quatre sections (\emph{\#pragma omp section}), une pour chaque appel à \emph{minimize}. Nous avons choisi des sections plutôt que des tâches car elles permettent d'avoir une barrière à la fin de leur exécution.
+Nous avons ajouté un niveau supplémentaire de parallélisation avec l'ajout d'OpenMP. En effet, sur chaque machine traitant une instance de \emph{minimize} nous avons parallélisé les appels récursif à la fonction \emph{minimize}. 
+Nous avons donc défini quatre sections (\emph{\#pragma omp section}), une pour chaque appel à \emph{minimize}. Nous avons choisi des sections plutôt que des tâches car elles permettent d'avoir une barrière à la fin de leur exécution. 
 
 %TODO A modifier quand ça marchera
-Nous avons de plus ajouter une réduction sur le minimum obtenu dans toutes ces exécutions (\emph{\#pragma omp parallel sections reduction (min:min\_ub)}).
+Nous avons, de plus, ajouté une réduction sur le minimum obtenu dans toutes ces exécutions (\emph{\#pragma omp parallel sections reduction (min:min\_ub)}).
 %TODO
 
 
@@ -199,13 +199,13 @@ Nous avons de plus ajouter une réduction sur le minimum obtenu dans toutes ces 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Conclusion générale}
-Ce projet nous a permis de réfléchir à la façon de paralléliser un programme séquentiel, de manipuler MPI et OpenMP.
-%TODO Ahhhhh je sais pas quoi mettre d'autre
+Ce projet nous a permis de réfléchir à la façon de paralléliser un programme séquentiel tout en s'initiant à la programmation avec MPI et OpenMP. 
+Bien que nous ayons regretté de ne pas pouvoir tester ce programme 
+sur plusieurs machines physiques, nous avons pu constater 
+à quel point l'utilisation du parallélisme sur un projet 
+devient crucial à partir du moment où l'on souhaite obtenir un résultat calculé
+avec une bonne précision en un minimum de temps sur cet algorithme. 
 
 \end{document}
 
-\begin{figure}[H]
-    \center
-    \includegraphics[width=13.9cm]{Images/storyboard.png}
-    \caption{Le storyboard}
-\end{figure}
+
