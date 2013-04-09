@@ -95,24 +95,19 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-	// cout << "ml:" << ml.size() << endl;
-
 //	#pragma omp parallel sections reduction (min:min_ub)
-//	{
-	//	#pragma omp section
+	#pragma omp parallel sections
+	{
+		#pragma omp section
 		minimize(f,xl,yl,threshold,min_ub,ml);
-	//	#pragma omp section
+		#pragma omp section
 		minimize(f,xl,yr,threshold,min_ub,ml);
-	//	#pragma omp section
+		#pragma omp section
 		minimize(f,xr,yl,threshold,min_ub,ml);
-	//	#pragma omp section
+		#pragma omp section
 		minimize(f,xr,yr,threshold,min_ub,ml);
-//  }
-  // min des 4 
-  // min_ub = min( min_ub0, min_ub1, min_ub2, min_ub3 );
-  
-  
-  
+  }
+
 }
 
 // Branch-and-bound minimization algorithm
@@ -191,6 +186,7 @@ void minimize_first(itvfun f,  // Function to minimize
 int main(int argc, char **argv)
 {
 	int i, j; // iterators
+	
 	
 	MPI_Init(&argc, &argv);
 	
