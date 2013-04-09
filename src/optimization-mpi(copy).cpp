@@ -21,7 +21,7 @@
 using namespace std;
 
 int nbProc;
-int RANK;
+int rang;
 
 struct interv{
 	 interval x; // Current bounds for 1st dimension
@@ -65,7 +65,6 @@ void minimize(itvfun f,  // Function to minimize
 	      double& min_ub,  // Current minimum upper bound
 	      minimizer_list& ml) // List of current minimizers
 {
-
   interval fxy = f(x,y);
   
   if (fxy.left() > min_ub) { // Current box cannot contain minimum?
@@ -98,7 +97,7 @@ void minimize(itvfun f,  // Function to minimize
 	minimize(f,xl,yr,threshold,min_ub,ml);
 	minimize(f,xr,yl,threshold,min_ub,ml);
 	minimize(f,xr,yr,threshold,min_ub,ml);
-  
+
 }
 
 // Branch-and-bound minimization algorithm
@@ -109,7 +108,6 @@ void minimize_first(itvfun f,  // Function to minimize
 	      double& min_ub,  // Current minimum upper bound
 	      minimizer_list& ml)// List of current minimizers 
 {
-	
   interval fxy = f(x,y);
   
   if (fxy.left() > min_ub) { // Current box cannot contain minimum?
@@ -175,10 +173,11 @@ int main(int argc, char **argv)
 {
 	int i, j; // iterators
 	
+	
 	MPI_Init(&argc, &argv);
 	
 	MPI_Comm_size(MPI_COMM_WORLD, &nbProc);
-	MPI_Comm_rank(MPI_COMM_WORLD, &RANK);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rang);
 	
   cout.precision(16);
   // By default, the currently known upper bound for the minimizer is +oo
@@ -201,7 +200,7 @@ int main(int argc, char **argv)
   bool good_choice;
 
   // Asking the user for the name of the function to optimize
-  if ( RANK == 0 )
+  if ( rang == 0 )
 	{
 		do {
 		  good_choice = true;
@@ -237,13 +236,12 @@ int main(int argc, char **argv)
   
   // Every computer execute the minimize function 
   minimize(pack.constantes.f, pack.inter.x, pack.inter.y, pack.constantes.threshold, pack.constantes.min_ub, pack.constantes.ml);
-  cout << pack.constantes.min_ub << endl;
 
   // Store the minimum value into the global variable 
 	MPI_Reduce(&pack.constantes.min_ub, &min_global, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
 	
 	// The computer #0 
-	if (RANK == 0){
+	if (rang == 0){
 		MPI_Status status;
 		int size;
 		
@@ -279,7 +277,7 @@ int main(int argc, char **argv)
 			delete[] min;
 	}
   
-  if (RANK == 0){
+  if (rang == 0){
     // Displaying all potential minimizers
   	copy(pack.constantes.ml.begin(),pack.constantes.ml.end(), ostream_iterator<minimizer>(cout,"\n"));    
 		cout << "Number of minimizers: " << pack.constantes.ml.size() << endl;
@@ -287,8 +285,6 @@ int main(int argc, char **argv)
   }
   
   MPI_Finalize();
-  
-  
   
   return 0;
 }
