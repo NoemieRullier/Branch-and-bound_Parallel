@@ -180,7 +180,6 @@ Nous avons donc défini quatre sections (\emph{\#pragma omp section}), une pour 
 
 %TODO A modifier quand ça marchera
 Nous avons, de plus, ajouté une réduction sur le minimum obtenu dans toutes ces exécutions (\emph{\#pragma omp parallel sections reduction (min:min\_ub)}).
-%TODO
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -191,6 +190,7 @@ Nous avons, de plus, ajouté une réduction sur le minimum obtenu dans toutes ce
 Afin d'effectuer nos tests, nous avons choisi d'utiliser tous les algorithmes proposés avec des précisions différentes.
 
 \subsection{MPI}
+%TODO Clément: faire texte comparaison
 
 Cette comparaison a été faite pour la précision \emph{0,001}.
 
@@ -293,6 +293,9 @@ three\_hump\_camel & 154 & 0.02863407135145293 & 4.672\\
 booth & 303 & 0.0001564025878906251 & 3.304\\
 \hline
 \end{tabular}
+
+\subsection{OpenMP}
+%TODO Clément dire queça marche pas donc on a pas de résultats
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
