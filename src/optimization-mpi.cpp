@@ -65,7 +65,7 @@ void minimize(itvfun f,  // Function to minimize
 	      double& min_ub,  // Current minimum upper bound
 	      minimizer_list& ml) // List of current minimizers
 {
-	double min_ub0, min_ub1, min_ub2, min_ub3;
+	// double min_ub0, min_ub1, min_ub2, min_ub3;
 
   interval fxy = f(x,y);
   
@@ -95,21 +95,23 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-	cout << "ml:" << ml.size() << endl;
+	// cout << "ml:" << ml.size() << endl;
 
-	#pragma omp parallel sections reduction (min:min_ub)
-	{
-		#pragma omp section
+//	#pragma omp parallel sections reduction (min:min_ub)
+//	{
+	//	#pragma omp section
 		minimize(f,xl,yl,threshold,min_ub,ml);
-		#pragma omp section
+	//	#pragma omp section
 		minimize(f,xl,yr,threshold,min_ub,ml);
-		#pragma omp section
+	//	#pragma omp section
 		minimize(f,xr,yl,threshold,min_ub,ml);
-		#pragma omp section
+	//	#pragma omp section
 		minimize(f,xr,yr,threshold,min_ub,ml);
-  }
+//  }
   // min des 4 
   // min_ub = min( min_ub0, min_ub1, min_ub2, min_ub3 );
+  
+  
   
 }
 
@@ -119,8 +121,7 @@ void minimize_first(itvfun f,  // Function to minimize
 	      const interval& y, // Current bounds for 2nd dimension
 	      double threshold,  // Threshold at which we should stop splitting
 	      double& min_ub,  // Current minimum upper bound
-	      minimizer_list& ml// List of current minimizers
-	      /*int RANK*/) 
+	      minimizer_list& ml)// List of current minimizers 
 {
 	
 	
@@ -154,12 +155,14 @@ void minimize_first(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 	
+	// Preparation of the constant part of the package to send
 	consts constante;
 	constante.f = f;
 	constante.threshold = threshold;
 	constante.min_ub = min_ub;
 	constante.ml = ml;
 	
+	// Preparation of the various intervals 
 	interv inter[4];
 	inter[0].x = xl;
 	inter[0].y = yl;
@@ -170,13 +173,14 @@ void minimize_first(itvfun f,  // Function to minimize
 	inter[3].x = xr;
 	inter[3].y = yr;
 	
+	// Packaging the message
 	package pack[4];
 	for (int i = 0; i < 4; ++i){
 		pack[i].inter = inter[i];
 		pack[i].constantes = constante;
 	}
 	
-	//MPISend à tous --> voir main
+	// Send each package to a computer 
 	for(int i=0; i<nbProc; ++i){
 		MPI_Send(&pack[i],sizeof(package),MPI_BYTE,i,0,MPI_COMM_WORLD);
 	}
@@ -186,6 +190,7 @@ void minimize_first(itvfun f,  // Function to minimize
 
 int main(int argc, char **argv)
 {
+	int i, j; // iterators
 	
 	MPI_Init(&argc, &argv);
 	
@@ -195,6 +200,8 @@ int main(int argc, char **argv)
   cout.precision(16);
   // By default, the currently known upper bound for the minimizer is +oo
   double min_ub = numeric_limits<double>::infinity();
+  // The global minimum
+  double min_global;
   // List of potential minimizers. They may be removed from the list
   // if we later discover that their smallest minimum possible is 
   // greater than the new current upper bound
@@ -236,30 +243,69 @@ int main(int argc, char **argv)
 		cout << "Precision? ";
 		cin >> precision;
   
-  	minimize_first(fun.f,fun.x,fun.y,precision,min_ub,minimums/*, RANK)*/);
+  	minimize_first(fun.f,fun.x,fun.y,precision,min_ub,minimums);
   }
   
-  //int msg;
   package pack;
   
+  
+  // Each computer receive a package
   MPI_Recv(&pack,sizeof(package),MPI_BYTE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-  cout << "Message recu " << pack.inter.x << " par " << RANK << endl;
+  
+  // Every computer execute the minimize function 
   minimize(pack.constantes.f, pack.inter.x, pack.inter.y, pack.constantes.threshold, pack.constantes.min_ub, pack.constantes.ml);
-  
-  MPI_Reduce( &minimums, &min_ub, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
-  
-  // Reception du message tous --> executer leur minimize
+  cout << pack.constantes.min_ub << endl;
+
+  // Store the minimum value into the global variable 
+	MPI_Reduce(&pack.constantes.min_ub, &min_global, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD );
+	
+	// The computer #0 
+	if (RANK == 0){
+		MPI_Status status;
+		int size;
+		
+		// All the other computers
+		for (i=1; i<4;++i){
+			MPI_Probe(i, 0,MPI_COMM_WORLD , &status);
+			MPI_Get_count(&status, MPI_BYTE, &size);
+			
+			int minimumSize = size / sizeof(minimizer);
+			minimizer * tmpMinimizer = new minimizer[minimumSize];
+
+			// Receive the array ml of the other computers
+ 			MPI_Recv(tmpMinimizer,size,MPI_BYTE,i,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+ 			
+ 			// Add their elements of ml in the ml array of computer #0
+ 			for (j=0; j< (size / sizeof(minimizer)); ++j){
+ 				pack.constantes.ml.insert(tmpMinimizer[j]);
+ 			}
+			delete[]  tmpMinimizer;
+		}
+	}
+	else {
+			// Copy the list ml of each other computer in array
+			int k = 0;
+			minimizer * min = new minimizer[pack.constantes.ml.size()];
+			for (minimizer m: pack.constantes.ml)
+			{
+				min[k] = m;
+				k++;
+			}
+			// Send the array to the computer #0
+			MPI_Send(min,k*sizeof(minimizer),MPI_BYTE,0,0,MPI_COMM_WORLD);
+			delete[] min;
+	}
   
   if (RANK == 0){
-    cout << "bloup" << endl;
-      // Displaying all potential minimizers
-  	copy(minimums.begin(),minimums.end(),
-       ostream_iterator<minimizer>(cout,"\n"));    
-		cout << "Number of minimizers: " << minimums.size() << endl;
-		cout << "Upper bound for minimum: " << min_ub << endl;
+    // Displaying all potential minimizers
+  	copy(pack.constantes.ml.begin(),pack.constantes.ml.end(), ostream_iterator<minimizer>(cout,"\n"));    
+		cout << "Number of minimizers: " << pack.constantes.ml.size() << endl;
+		cout << "Upper bound for minimum: " << min_global << endl;
   }
   
   MPI_Finalize();
+  
+  
   
   return 0;
 }
