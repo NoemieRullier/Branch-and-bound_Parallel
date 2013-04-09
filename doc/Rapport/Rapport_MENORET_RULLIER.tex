@@ -230,7 +230,7 @@ Cette comparaison a été faite pour la précision \emph{0,01}.
 
 \begin{tabular}{|c|c|c|c|}
 \hline
-\multicolumn{4}{|c|}{Parallel version with MPI}\\
+\multicolumn{4}{|c|}{Sequential version}\\
 \hline
 Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
 \hline
@@ -246,7 +246,7 @@ booth & 225 & 0.0008430480957031254 & 5.348\\
 
 \begin{tabular}{|c|c|c|c|}
 \hline
-\multicolumn{4}{|c|}{Sequential version}\\
+\multicolumn{4}{|c|}{Parallel version with MPI}\\
 \hline
 Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
 \hline
@@ -257,6 +257,40 @@ beale & 83 & 0.001346965117212209 & 0.044\\
 three\_hump\_camel & 152 & 0.1145362854871269 & 0.116\\
 \hline
 booth & 23 & 0.0008430480957031254 & 0.040\\
+\hline
+\end{tabular}
+
+Cette comparaison a été faite pour la précision \emph{0,005}.
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Sequential version}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 29237 & 6.1188468974418 & 1.100\\
+\hline
+beale & 76 & 0.0002946668823264963 & 0.076\\
+\hline
+three\_hump\_camel & 152 & 0.02863407135145293 & 0.276\\
+\hline
+booth & 21 & 0.0001564025878906251 & 0.080\\
+\hline
+\end{tabular}
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Parallel version with MPI}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 36163 & 6.1188468974418 & 11.001\\
+\hline
+beale & 3795 & 0.0002946668823264963 & 4.388\\
+\hline
+three\_hump\_camel & 154 & 0.02863407135145293 & 4.672\\
+\hline
+booth & 303 & 0.0001564025878906251 & 3.304\\
 \hline
 \end{tabular}
 
