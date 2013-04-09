@@ -171,12 +171,11 @@ Afin que notre structure soit bien envoyée via la fonction \emph{MPI\_Send()}, 
 
 Nous avons donc, dans la suite de la fonction main, fait appel à la fonction \emph{MPI\_Recv()}. Celle-ci permet aux différentes machines de recevoir les messages envoyés par la machine de rang $i$ (ici $i=0$). Ces machines vont ensuite exécuter la fonction \emph{minimize}. 
 
-%TODO
-De plus, dans le but de récupérer le résultat final, nous avons ajouté la fonction \emph{MPI\_Reduce()}. Celle-ci nous permettra de trouver le minimum de tous les minimums calculés par chaque machine. 
-%TODO A revoir car ça marche pas
+De plus, dans le but de récupérer le minimum final, nous avons ajouté la fonction \emph{MPI\_Reduce()}. Celle-ci nous permettra de trouver le minimum de tous les minimums calculés par chaque machine et de la stocker dans \emph{min\_global}.
+Nous devons aussi récupérer la liste des intervalles dans lesquels un minimum a été trouvé. Pour cela, nous avons pour toutes les machines (autres que celle de rang 0) envoyé à la machine 0, leur tableau contenant les minimums. La machine de rang 0, va recevoir ce tableau et ajouter les éléments de celui-ci à sa propre liste de minimums. Elle doit cependant créer un tableau de la taille du tableau qu'elle va recevoir; or elle ne la connait pas. Pour cela, nous utilisons \emph{MPI\_Probe()} qui permet d'initialiser un \emph{MPI\_Status} et de récupérer sa taille via un \emph{MPI\_Get\_Count()}.
 
 \subsection{OpenMP}
-Nous avons ajouté un niveau supplémentaire de parallélisation avec l'ajout d'OpenMP. En effet, sur chaque machine traitant une instance de \emph{minimize} nous avons parallélisé les appels récursif à la fonction \emph{minimize}. 
+Nous avons ajouté un niveau supplémentaire de parallélisation avec l'ajout d'OpenMP. En effet, sur chaque machine traitant une instance de \emph{minimize} nous avons parallélisé les appels récursifs à la fonction \emph{minimize}. 
 Nous avons donc défini quatre sections (\emph{\#pragma omp section}), une pour chaque appel à \emph{minimize}. Nous avons choisi des sections plutôt que des tâches car elles permettent d'avoir une barrière à la fin de leur exécution. 
 
 %TODO A modifier quand ça marchera
@@ -189,9 +188,77 @@ Nous avons, de plus, ajouté une réduction sur le minimum obtenu dans toutes ce
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \section{Les résultats}
+Afin d'effectuer nos tests, nous avons choisi d'utiliser tous les algorithmes proposés avec des précisions différentes.
 
+\subsection{MPI}
 
+Cette comparaison a été faite pour la précision \emph{0,001}.
 
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Sequential version}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 18506 & 3.788114240740458 & 2.816\\
+\hline
+beale & 76 & 4.613139957035884e-06 & 0.576\\
+\hline
+three\_hump\_camel & 152 & 0.0004474073648452814 & 5.124\\
+\hline
+booth & 23 & 3.293156623840334e-06 & 0.568\\
+\hline
+\end{tabular}
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Parallel version with MPI}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 96767 & 3.788114240740458 & 11.321\\
+\hline
+beale & 18525 & 4.613139957035884e-06 & 6.112\\
+\hline
+three\_hump\_camel & 154 & 0.0004474073648452814 & 14.157\\
+\hline
+booth & 808 & 3.293156623840334e-06 & 4.256\\
+\hline
+\end{tabular}
+
+Cette comparaison a été faite pour la précision \emph{0,01}.
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Parallel version with MPI}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 16889 & 9.153558944677261 & 5.080\\
+\hline
+beale & 2209 & 0.001346965117212209 & 2.976\\
+\hline
+three\_hump\_camel & 154 & 0.1145362854871269 & 0.116\\
+\hline
+booth & 23 & 0.0008430480957031254 & 0.040\\
+\hline
+\end{tabular}
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Sequential version}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 14989 & 9.153558944677261 & 0.512\\
+\hline
+beale & 83 & 0.001346965117212209 & 0.044\\
+\hline
+three\_hump\_camel & 152 & 0.1145362854871269 & 0.116\\
+\hline
+booth & 23 & 0.0008430480957031254 & 0.040\\
+\hline
+\end{tabular}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
