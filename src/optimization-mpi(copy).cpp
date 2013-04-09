@@ -65,6 +65,7 @@ void minimize(itvfun f,  // Function to minimize
 	      double& min_ub,  // Current minimum upper bound
 	      minimizer_list& ml) // List of current minimizers
 {
+
   interval fxy = f(x,y);
   
   if (fxy.left() > min_ub) { // Current box cannot contain minimum?
@@ -93,19 +94,11 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-//	#pragma omp parallel sections reduction (min:min_ub)
-	#pragma omp parallel sections
-	{
-		#pragma omp section
-		minimize(f,xl,yl,threshold,min_ub,ml);
-		#pragma omp section
-		minimize(f,xl,yr,threshold,min_ub,ml);
-		#pragma omp section
-		minimize(f,xr,yl,threshold,min_ub,ml);
-		#pragma omp section
-		minimize(f,xr,yr,threshold,min_ub,ml);
-  }
-
+	minimize(f,xl,yl,threshold,min_ub,ml);
+	minimize(f,xl,yr,threshold,min_ub,ml);
+	minimize(f,xr,yl,threshold,min_ub,ml);
+	minimize(f,xr,yr,threshold,min_ub,ml);
+  
 }
 
 // Branch-and-bound minimization algorithm
@@ -117,9 +110,6 @@ void minimize_first(itvfun f,  // Function to minimize
 	      minimizer_list& ml)// List of current minimizers 
 {
 	
-	
-	cout << "RANK :" << RANK << endl;
-
   interval fxy = f(x,y);
   
   if (fxy.left() > min_ub) { // Current box cannot contain minimum?
@@ -184,7 +174,6 @@ void minimize_first(itvfun f,  // Function to minimize
 int main(int argc, char **argv)
 {
 	int i, j; // iterators
-	
 	
 	MPI_Init(&argc, &argv);
 	
