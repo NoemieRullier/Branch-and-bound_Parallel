@@ -135,7 +135,7 @@ MENORET Clément, RULLIER Noémie \\
 \end{titlepage}
 
 \newpage
-\tableofcontents  
+\tableofcontents 
 
 % Introduction
 \newpage
@@ -147,7 +147,7 @@ MENORET Clément, RULLIER Noémie \\
 \section{Introduction}
 L'objectif de ce projet fut de paralléliser l'algorithme \emph{branch and bound} permettant de calculer le minimum d'une fonction réelle par le découpage en boites de domaine.
 
-Nous allons donc ici présenter les différentes décisions prises afin de paralléliser l'algorithme ainsi qu'une comparaison des résultats obtenus entre la version parallèle et séquentielle.
+Nous allons donc ici présenter les différentes décisions prises afin de paralléliser l'algorithme à l'aide des technologies \emph{MPI} et \emph{OpenMP}, ainsi qu'une comparaison des résultats obtenus entre la version parallèle et séquentielle. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Etape 1
@@ -192,39 +192,10 @@ Afin d'effectuer nos tests, nous avons choisi d'utiliser tous les algorithmes pr
 \subsection{MPI}
 %TODO Clément: faire texte comparaison
 
-Cette comparaison a été faite pour la précision \emph{0,001}.
+Suite à notre étude comparative des deux versions des programmes, séquentiels et parallélisés, on remarque que les résultats obtenus avec la version parallélisée sont identiques aux résultats obtenus avec la version séquentielle. 
+Cependant, le fait d'utiliser MPI de manière virtuelle sur une seule machine physique provoque un ralentissement de l'exécution de l'algorithme du aux nombreux traitements à réaliser pour la simulation du comportement de MPI et les modifications apportées à l'algorithme en terme d'envoi et de réception des données. Entre différentes machines physiques, la charge de travail serait répartie. \\
 
-\begin{tabular}{|c|c|c|c|}
-\hline
-\multicolumn{4}{|c|}{Sequential version}\\
-\hline
-Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
-\hline
-goldstein\_price & 18506 & 3.788114240740458 & 2.816\\
-\hline
-beale & 76 & 4.613139957035884e-06 & 0.576\\
-\hline
-three\_hump\_camel & 152 & 0.0004474073648452814 & 5.124\\
-\hline
-booth & 23 & 3.293156623840334e-06 & 0.568\\
-\hline
-\end{tabular}
-
-\begin{tabular}{|c|c|c|c|}
-\hline
-\multicolumn{4}{|c|}{Parallel version with MPI}\\
-\hline
-Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
-\hline
-goldstein\_price & 96767 & 3.788114240740458 & 11.321\\
-\hline
-beale & 18525 & 4.613139957035884e-06 & 6.112\\
-\hline
-three\_hump\_camel & 154 & 0.0004474073648452814 & 14.157\\
-\hline
-booth & 808 & 3.293156623840334e-06 & 4.256\\
-\hline
-\end{tabular}
+Les résultats détaillés de notre benchmark sont donnés dans les tableaux suivants : \\
 
 Cette comparaison a été faite pour la précision \emph{0,01}.
 
@@ -294,8 +265,46 @@ booth & 303 & 0.0001564025878906251 & 3.304\\
 \hline
 \end{tabular}
 
+Cette comparaison a été faite pour la précision \emph{0,001}.
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Sequential version}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 18506 & 3.788114240740458 & 2.816\\
+\hline
+beale & 76 & 4.613139957035884e-06 & 0.576\\
+\hline
+three\_hump\_camel & 152 & 0.0004474073648452814 & 5.124\\
+\hline
+booth & 23 & 3.293156623840334e-06 & 0.568\\
+\hline
+\end{tabular}
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{Parallel version with MPI}\\
+\hline
+Algorithm & Number of minimizers & Upper bound for minimum & Time (s) \\
+\hline
+goldstein\_price & 96767 & 3.788114240740458 & 11.321\\
+\hline
+beale & 18525 & 4.613139957035884e-06 & 6.112\\
+\hline
+three\_hump\_camel & 154 & 0.0004474073648452814 & 14.157\\
+\hline
+booth & 808 & 3.293156623840334e-06 & 4.256\\
+\hline
+\end{tabular}
+
 \subsection{OpenMP}
 %TODO Clément dire queça marche pas donc on a pas de résultats
+
+Nous n'avons malheureusement pas eu le temps de terminer 
+l'implémentation de l'algorithme parallèle avec OpenMP, 
+nous ne pouvons donc pas fournir de résultats expérimentaux. \\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -305,9 +314,8 @@ booth & 303 & 0.0001564025878906251 & 3.304\\
 \section{Conclusion générale}
 Ce projet nous a permis de réfléchir à la façon de paralléliser un programme séquentiel tout en s'initiant à la programmation avec MPI et OpenMP. 
 Bien que nous ayons regretté de ne pas pouvoir tester ce programme 
-sur plusieurs machines physiques, nous avons pu constater 
-à quel point l'utilisation du parallélisme sur un projet 
-devient crucial à partir du moment où l'on souhaite obtenir un résultat calculé
+sur plusieurs machines physiques, l'utilisation du parallélisme sur ce projet 
+reste cruciale à partir du moment où l'on souhaite obtenir un résultat calculé
 avec une bonne précision en un minimum de temps sur cet algorithme. 
 
 \end{document}
