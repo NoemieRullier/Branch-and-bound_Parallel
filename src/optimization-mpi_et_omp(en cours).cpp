@@ -44,6 +44,29 @@ struct package{
 };
 typedef package package;
 
+
+
+// sorting function  
+void tri_a_bulle( double *t, int n ){ 
+	int j = 0;
+	double tmp = 0;
+	int en_desordre = 1; // C bool
+	while ( en_desordre )
+	{
+		en_desordre = 0; 
+		for ( j =0; j < n-1; j++ ){  
+			if (t[j] > t[j+1]){
+				tmp = t[j+1];
+				t[j+1] = t[j];
+				t[j] = tmp;
+				en_desordre = 1;
+			}
+		}
+	}
+}
+
+
+
 // Split a 2D box into four subboxes by splitting each dimension
 // into two equal subparts
 void split_box(const interval& x, const interval& y,
@@ -93,18 +116,40 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-//	#pragma omp parallel sections reduction (Min:min_ub)
-//	#pragma omp parallel sections
-//	{
-//		#pragma omp section
-		minimize(f,xl,yl,threshold,min_ub,ml);
-//		#pragma omp section
-		minimize(f,xl,yr,threshold,min_ub,ml);
-//		#pragma omp section
-		minimize(f,xr,yl,threshold,min_ub,ml);
-//		#pragma omp section
-		minimize(f,xr,yr,threshold,min_ub,ml);
-//  }
+
+
+
+// prepare reduction over min_ub# 
+double min_ub0, min_ub1, min_ub2, min_ub3;
+
+// #pragma omp parallel sections reduction (MIN:min_ub)
+//#pragma omp 
+
+#pragma omp parallel sections
+{
+		#pragma omp section
+		minimize(f,xl,yl,threshold,min_ub0,ml);
+		#pragma omp section
+		minimize(f,xl,yr,threshold,min_ub1,ml);
+		#pragma omp section
+		minimize(f,xr,yl,threshold,min_ub2,ml);
+		#pragma omp section
+		minimize(f,xr,yr,threshold,min_ub3,ml);
+}
+
+// equivalent : reduction (MIN:min_ub) 
+double * min_ub_tab = new double[4];
+
+min_ub_tab[0] = min_ub0;
+min_ub_tab[1] = min_ub1;
+min_ub_tab[2] = min_ub2;
+min_ub_tab[3] = min_ub3;
+
+tri_a_bulle( min_ub_tab, 4);
+
+min_ub = min_ub_tab[0];
+
+delete[] min_ub_tab;
 
 }
 
@@ -182,7 +227,10 @@ int main(int argc, char **argv)
 	int i, j; // iterators
 	
 	
+	omp_set_num_threads( 4 );
+	
 	MPI_Init(&argc, &argv);
+	
 	
 	
 	MPI_Comm_size(MPI_COMM_WORLD, &nbProc);
