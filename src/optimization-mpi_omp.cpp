@@ -2,9 +2,10 @@
   Branch and bound algorithm to find the minimum of continuous binary 
   functions using interval arithmetic.
 
-  Sequential version
+  Parallel version with MPI and OpenMP
 
   Author: Frederic Goualard <Frederic.Goualard@univ-nantes.fr>
+  Modification by: Clément MENORET and Noémie RULLIER
   v. 1.0, 2013-02-15
 */
 
@@ -43,6 +44,29 @@ struct package{
 	
 };
 typedef package package;
+
+
+
+// Sorting function  
+void tri_a_bulle( double *t, int n ){ 
+	int j = 0;
+	double tmp = 0;
+	int en_desordre = 1; // C bool
+	while ( en_desordre )
+	{
+		en_desordre = 0; 
+		for ( j =0; j < n-1; j++ ){  
+			if (t[j] > t[j+1]){
+				tmp = t[j+1];
+				t[j+1] = t[j];
+				t[j] = tmp;
+				en_desordre = 1;
+			}
+		}
+	}
+}
+
+
 
 // Split a 2D box into four subboxes by splitting each dimension
 // into two equal subparts
@@ -93,11 +117,53 @@ void minimize(itvfun f,  // Function to minimize
   interval xl, xr, yl, yr;
   split_box(x,y,xl,xr,yl,yr);
 
-	minimize(f,xl,yl,threshold,min_ub,ml);
-	minimize(f,xl,yr,threshold,min_ub,ml);
-	minimize(f,xr,yl,threshold,min_ub,ml);
-	minimize(f,xr,yr,threshold,min_ub,ml);
 
+	// Prepare reduction over min_ub# 
+	double min_ub0, min_ub1, min_ub2, min_ub3;
+
+	#pragma omp parallel sections
+	{
+		#pragma omp section
+		minimize(f,xl,yl,threshold,min_ub0,ml);
+		#pragma omp section
+		minimize(f,xl,yr,threshold,min_ub1,ml);
+		#pragma omp section
+		minimize(f,xr,yl,threshold,min_ub2,ml);
+		#pragma omp section
+		minimize(f,xr,yr,threshold,min_ub3,ml);
+	}
+
+	// Equivalent : reduction (MIN:min_ub)
+	double * min_ub_tab = new double[4];
+
+	min_ub_tab[0] = min_ub0;
+	min_ub_tab[1] = min_ub1;
+	min_ub_tab[2] = min_ub2;
+	min_ub_tab[3] = min_ub3;
+
+	tri_a_bulle(min_ub_tab, 4);
+
+	min_ub = min_ub_tab[0];
+
+	delete[] min_ub_tab;
+	
+	// Other solution: Let min_ub in all the minimize and put a #pragma omp critical befor each section like this:
+	
+//	#pragma omp parallel sections
+//	{
+//		#pragma omp section
+//		#pragma omp critical
+//		minimize(f,xl,yl,threshold,min_ub,ml);
+//		#pragma omp section
+//		#pragma omp critical
+//		minimize(f,xl,yr,threshold,min_ub,ml);
+//		#pragma omp section
+//		#pragma omp critical
+//		minimize(f,xr,yl,threshold,min_ub,ml);
+//		#pragma omp section
+//		#pragma omp critical
+//		minimize(f,xr,yr,threshold,min_ub,ml);
+//	}
 }
 
 // Branch-and-bound minimization algorithm
@@ -171,10 +237,16 @@ void minimize_first(itvfun f,  // Function to minimize
 
 int main(int argc, char **argv)
 {
-	int i, j; // iterators
+	int i, j; // Iterators
 	
+	omp_set_num_threads( 4 );
+	omp_set_max_active_levels( 2 );
+	
+	omp_set_num_threads( 4 );
 	
 	MPI_Init(&argc, &argv);
+	
+	
 	
 	MPI_Comm_size(MPI_COMM_WORLD, &nbProc);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rang);

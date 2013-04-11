@@ -2,9 +2,10 @@
   Branch and bound algorithm to find the minimum of continuous binary 
   functions using interval arithmetic.
 
-  Sequential version
-
-  Author: Frederic Goualard <Frederic.Goualard@univ-nantes.fr>
+ Parallel version with MPI
+ 
+ Author: Frederic Goualard <Frederic.Goualard@univ-nantes.fr>
+ Modification by: Clément MENORET and Noémie RULLIER
   v. 1.0, 2013-02-15
 */
 
