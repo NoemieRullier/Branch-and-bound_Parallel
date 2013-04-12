@@ -242,8 +242,6 @@ int main(int argc, char **argv)
 	omp_set_num_threads( 4 );
 	omp_set_max_active_levels( 2 );
 	
-	omp_set_num_threads( 4 );
-	
 	MPI_Init(&argc, &argv);
 	
 	
