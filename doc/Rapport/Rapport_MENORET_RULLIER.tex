@@ -177,13 +177,13 @@ Nous devons aussi récupérer la liste des intervalles dans lesquels un minimum 
 \subsection{OpenMP}
 Nous avons ajouté un niveau supplémentaire de parallélisation avec l'ajout d'OpenMP. En effet, sur chaque machine traitant une instance de \emph{minimize} nous avons parallélisé les appels récursifs à la fonction \emph{minimize}. 
 Nous avons donc défini quatre sections (\emph{\#pragma omp section}), une pour chaque appel à \emph{minimize}. Nous avons choisi des sections plutôt que des tâches car elles permettent d'avoir une barrière à la fin de leur exécution.
-Afin de ne pas avoir de problèmes de mémoire, nous avons ajouté un nombre maximum de threads et défini le nombre de threads lancé à chaque instrucution de parallélisation trouvée.
+Afin de ne pas avoir de problèmes de surcharge au niveau du nombre de threads, nous avons ajouté un nombre maximum de threads et défini le nombre de threads lancé à chaque instruction de parallélisation trouvée.
 
 Nous avons ensuite essayé différentes façons d'utiliser \emph{OpenMP}.
 
-La première a été d'utiliser quatre variables permettant de stocker chaque minimum appelé dans les quatre appels de \emph{minimize}. Après que toutes les sections aient terminées, on va calculer le minimum de tous les minimums retournés.
+La première a été d'utiliser quatre variables permettant de stocker chaque minimum appelé dans les quatre appels de \emph{minimize}. Après que toutes les sections aient terminées, on calcule alors le minimum de tous les minimums retournés.
 
-La deuxième fut d'utiliser des \emph{\#pragma critical} permettant d'avoir des sections critiques afin que les variables soit en exclusions mutelles.
+La deuxième fut d'utiliser des \emph{\#pragma critical} permettant d'avoir des sections critiques afin que les variables soit en exclusions mutuelles.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%  Etape 2
@@ -304,7 +304,7 @@ booth & 808 & 3.293156623840334e-06 & 4.256\\
 \subsection{OpenMP}
 %TODO Clément dire queça marche pas donc on a pas de résultats
 
-Nous n'avons malheureusement pas eu le temps de terminer l'implémentation de l'algorithme parallèle avec OpenMP,  nous ne pouvons donc pas fournir de résultats expérimentaux. \\
+Nous n'avons malheureusement pas eu le temps de terminer une implémentation de l'algorithme parallèle qui fonctionne bien avec OpenMP,  nous ne pouvons donc pas fournir de résultats expérimentaux. \\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
